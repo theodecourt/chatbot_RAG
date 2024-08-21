@@ -1,0 +1,92 @@
+{% extends "chatbox/base.html" %}
+
+{% block content %}
+
+<style>
+  .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+  }
+
+  .chat-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+  }
+
+  .chat-bubble {
+      padding: 10px;
+      border-radius: 10px;
+      margin: 10px 0;
+      max-width: 60%;
+      position: relative;
+      background-color: #f0f0f0;
+      text-align: center;
+  }
+
+  .question {
+      background-color: #f0f0f0;
+  }
+
+  .answer {
+      background-color: #d1f5d3;
+  }
+
+  .form-container {
+      margin-bottom: 20px;
+      text-align: center;
+  }
+
+  input[type="submit"], button {
+      margin-top: 10px;
+      cursor: pointer;
+  }
+
+  .form-container form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+  }
+
+  input, textarea {
+      width: 300px;
+      padding: 10px;
+      margin-bottom: 10px;
+  }
+
+</style>
+
+<div class="container">
+  <div class="form-container">
+    <form method="POST">
+      {% csrf_token %}
+      <label for="pergunta">Pergunta:</label>
+      <input id="pergunta" type="text" name="pergunta" required/>
+      <label for="resposta">Resposta:</label>
+      <textarea id="resposta" name="resposta" required></textarea>
+      <input type="submit" value="Adicionar Chatbox" />
+    </form>
+
+    <form method="POST" action="{% url 'apagar_banco' %}">
+      {% csrf_token %}
+      <button type="submit">Apagar Todos os Chatboxes</button>
+    </form>
+  </div>
+
+  <div class="chat-container">
+      {% for chat in chats %}
+      <div class="chat-bubble question">
+          <strong>Pergunta:</strong> {{ chat.pergunta }}
+      </div>
+      <div class="chat-bubble answer">
+          <strong>Resposta:</strong> {{ chat.resposta }}
+      </div>
+      {% endfor %}
+  </div>
+</div>
+
+{% endblock %}
