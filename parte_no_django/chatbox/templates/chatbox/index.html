@@ -62,14 +62,13 @@
 
 <div class="container">
   <div class="form-container">
-    <form method="POST">
-      {% csrf_token %}
-      <label for="pergunta">Pergunta:</label>
-      <input id="pergunta" type="text" name="pergunta" required/>
-      <label for="resposta">Resposta:</label>
-      <textarea id="resposta" name="resposta" required></textarea>
-      <input type="submit" value="Adicionar Chatbox" />
+    <form method="POST" action="{% url 'consulta_gpt' %}">
+        {% csrf_token %}
+        <label for="pergunta">Pergunta:</label>
+        <input id="pergunta" type="text" name="pergunta" required/>
+        <input type="submit" value="Consultar GPT" />
     </form>
+    
 
     <form method="POST" action="{% url 'apagar_banco' %}">
       {% csrf_token %}

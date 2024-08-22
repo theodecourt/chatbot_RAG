@@ -65,6 +65,7 @@ def run_chatbot():
         
         # Buscar documentos relevantes no ChromaDB
         relevant_documents = search_document(question)
+        print(f"Documentos Retornados: {relevant_documents}")
         documents_str = format_search_result(relevant_documents)
         
         # Atualizar o prompt com os documentos encontrados
