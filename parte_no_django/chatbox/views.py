@@ -53,7 +53,6 @@ def consulta_gpt(request):
 
         # Nova pergunta do usuário
         question = request.POST.get('pergunta')
-        # print(f"Usuario: {question}")
 
         # Adicionar a nova pergunta ao histórico
         conversation_history.append({"role": "user", "content": question})
@@ -73,17 +72,12 @@ def consulta_gpt(request):
         # Atualizar o prompt com os documentos encontrados
         prompt = prompt_template.format(documents=documents_str)
 
-        # Adicionar o prompt de sistema ao histórico de mensagens
-        conversation_history.append({"role": "system", "content": prompt})
-
+        # Gerar a resposta do ChatGPT considerando apenas o prompt principal, o contexto e a pergunta atual
         try:
-            # Gerar a resposta do ChatGPT considerando todo o histórico
-            answer = execute_llm(conversation_history)
+            answer = execute_llm(prompt, contexto_conversa, question)
         except Exception as e:
             print(f"Erro ao gerar resposta: {e}")
             return render(request, 'chatbox/index.html', {'chats': Chatbox.objects.all(), 'error': 'Erro ao gerar a resposta.'})
-
-        # print(f"Chatbot: {answer}")
 
         # Salva a nova pergunta e a resposta no banco de dados
         novo_chatbox = Chatbox(pergunta=question, resposta=answer)
@@ -139,7 +133,15 @@ def format_search_result(relevant_documents):
     return "\n".join(formatted_list)
 
 # Função para gerar a resposta do modelo levando em consideração o histórico de mensagens
-def execute_llm(messages):
+def execute_llm(prompt, contexto_conversa, question):
+    # Montar a mensagem que será enviada ao modelo
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "system", "content": contexto_conversa},
+        {"role": "user", "content": question}
+    ]
+
+    # Gerar a resposta do ChatGPT
     chat_completion = openai_client.chat.completions.create(
         messages=messages,
         model="gpt-3.5-turbo",
