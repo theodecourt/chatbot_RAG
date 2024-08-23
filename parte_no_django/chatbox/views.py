@@ -65,7 +65,6 @@ def consulta_gpt(request):
             return render(request, 'chatbox/index.html', {'chats': Chatbox.objects.all(), 'error': 'Erro ao gerar o contexto.'})
 
         # Buscar documentos relevantes no ChromaDB usando o contexto gerado pelo ChatGPT
-        print(f"\nContexto da conversa: {contexto_conversa}")
         relevant_documents = search_document(contexto_conversa)
         documents_str = format_search_result(relevant_documents)
 
