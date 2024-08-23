@@ -32,42 +32,87 @@ chroma_client = chromadb.PersistentClient(path=chromadb_path)
 collection = chroma_client.get_collection("my_collection")
 
 # Template para as respostas do chatbot
-prompt_template = """Você é um assistente de IA que responde as dúvidas dos usuários com bases nos documentos abaixo.
-Os documentos abaixo apresentam as fontes atualizadas e devem ser consideradas como verdade.
-Cite a fonte quando fornecer a informação. 
+prompt_template = """Você é um assistente de IA que responde as dúvidas dos usuários a respeito de um determinado político com bases nos documentos abaixo.
+As perguntas mais recentes devem ser consideradas com mais peso ao gerar a resposta.
 Documentos:
 {documents}
 """
 
+
 def consulta_gpt(request):
     if request.method == 'POST':
+        conversation_history = []
+
+        # Carregar as últimas 5 interações do banco de dados
+        historico_chatbox = Chatbox.objects.all().order_by('-id')[:5]
+
+        # Adicionar o histórico ao conversation_history (em ordem cronológica inversa)
+        for chat in reversed(historico_chatbox):
+            conversation_history.append({"role": "user", "content": chat.pergunta})
+            conversation_history.append({"role": "assistant", "content": chat.resposta})
+
+        # Nova pergunta do usuário
         question = request.POST.get('pergunta')
+        # print(f"Usuario: {question}")
 
-        print(f"Usuario: {question}")
+        # Adicionar a nova pergunta ao histórico
+        conversation_history.append({"role": "user", "content": question})
 
-        # Buscar documentos relevantes no ChromaDB
-        relevant_documents = search_document(question)
-        print(f"Documentos Retornados: {relevant_documents}")
+        # Gerar o contexto da conversa usando o ChatGPT, limitado a 100 tokens
+        try:
+            contexto_conversa = gerar_contexto_curto(conversation_history)
+        except Exception as e:
+            print(f"Erro ao gerar o contexto da conversa: {e}")
+            return render(request, 'chatbox/index.html', {'chats': Chatbox.objects.all(), 'error': 'Erro ao gerar o contexto.'})
 
+        # Buscar documentos relevantes no ChromaDB usando o contexto gerado pelo ChatGPT
+        print(f"\nContexto da conversa: {contexto_conversa}")
+        relevant_documents = search_document(contexto_conversa)
         documents_str = format_search_result(relevant_documents)
 
         # Atualizar o prompt com os documentos encontrados
         prompt = prompt_template.format(documents=documents_str)
 
+        # Adicionar o prompt de sistema ao histórico de mensagens
+        conversation_history.append({"role": "system", "content": prompt})
+
         try:
-            answer = execute_llm(prompt)
+            # Gerar a resposta do ChatGPT considerando todo o histórico
+            answer = execute_llm(conversation_history)
         except Exception as e:
             print(f"Erro ao gerar resposta: {e}")
             return render(request, 'chatbox/index.html', {'chats': Chatbox.objects.all(), 'error': 'Erro ao gerar a resposta.'})
 
-        print(f"Chatbot: {answer}")
+        # print(f"Chatbot: {answer}")
+
+        # Salva a nova pergunta e a resposta no banco de dados
         novo_chatbox = Chatbox(pergunta=question, resposta=answer)
         novo_chatbox.save()
+
         return redirect('index')  # Redireciona para a página inicial
     
     # Este bloco será executado para o método GET
     all_chats = Chatbox.objects.all()
     return render(request, 'chatbox/index.html', {'chats': all_chats})
+
+
+def gerar_contexto_curto(conversation_history):
+    # Prompt para gerar o contexto da conversa
+    prompt_contexto = [
+        {"role": "system", "content": "Analise a conversa abaixo e produza uma string que resuma o tema principal, considerando as últimas interações. Essa string será usada para realizar uma busca precisa em uma base de dados. O foco é criar um contexto claro e relevante para continuar a conversa."}
+
+    ]
+    prompt_contexto.extend(conversation_history)
+
+    # Gerar o contexto com base no histórico de mensagens, limitado a 100 tokens
+    chat_completion = openai_client.chat.completions.create(
+        messages=prompt_contexto,
+        model="gpt-3.5-turbo",
+        max_tokens=100,  # Limitar a resposta a 100 tokens
+        temperature=0.7  # Temperatura ajustada para dar flexibilidade ao modelo
+    )
+    contexto_conversa = chat_completion.choices[0].message.content
+    return contexto_conversa
 
 # Função para transformar texto em vetores usando o modelo de embedding
 def get_embedding(text):
@@ -94,9 +139,9 @@ def format_search_result(relevant_documents):
     return "\n".join(formatted_list)
 
 # Função para gerar a resposta do modelo levando em consideração o histórico de mensagens
-def execute_llm(prompt):
+def execute_llm(messages):
     chat_completion = openai_client.chat.completions.create(
-        messages=[{"role": "system", "content": prompt}],
+        messages=messages,
         model="gpt-3.5-turbo",
         max_tokens=400,
         temperature=0
