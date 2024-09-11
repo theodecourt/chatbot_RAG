@@ -3,7 +3,7 @@
 Siga os passos abaixo para rodar o projeto localmente:
 
 ## 1. Ative o ambiente virtual
-- No diretorio chatbot_RAG:
+No diretorio chatbot_RAG:
   ```bash
   env\Scripts\activate
   ```
@@ -12,7 +12,6 @@ Siga os passos abaixo para rodar o projeto localmente:
 Caso ainda não tenha instalado, use o arquivo requirements.txt para instalar as dependências do projeto:
 
 ```bash
-Copy code
 pip install -r requirements.txt
 ```
 
@@ -20,7 +19,6 @@ pip install -r requirements.txt
 Garanta que o banco de dados esteja atualizado com os modelos:
 
 ```bash
-Copy code
 python manage.py migrate
 ```
 
@@ -28,7 +26,6 @@ python manage.py migrate
 Para acessar o painel administrativo do Django, crie um superusuário:
 
 ```bash
-Copy code
 python manage.py createsuperuser
 ```
 
@@ -36,7 +33,6 @@ python manage.py createsuperuser
 Para rodar o servidor de desenvolvimento, utilize o comando:
 
 ```bash
-Copy code
 python manage.py runserver
 ```
 

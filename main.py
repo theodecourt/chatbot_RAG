@@ -1,9 +1,17 @@
 import chromadb
 from openai import OpenAI
 import os
+from dotenv import load_dotenv
+
+# Carregar as variáveis de ambiente do arquivo .env
+load_dotenv()
+
+
+# Obter a chave da API a partir do .env
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Inicialização do OpenAI e ChromaDB
-openai_client = OpenAI(api_key="sk-HDhkci4_AuehZ5v1qw_7dUwLT6kjHurxqvT_dlEZGGT3BlbkFJEOcdwBRCMRnZquK5F9rgOWQhUPxRCo1a34nVJCLNAA")
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) 
 
 chromadb_path = "./data_politico/chroma_storage"  # Caminho para o ChromaDB
 chroma_client = chromadb.PersistentClient(path=chromadb_path)
