@@ -3,7 +3,7 @@
 Siga os passos abaixo para rodar o projeto localmente:
 
 ## 1. Ative o ambiente virtual
-No diretorio chatbot_RAG:
+No diretorio do projeto:
   ```bash
   env\Scripts\activate
   ```
