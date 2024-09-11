@@ -16,11 +16,11 @@ def index(request):
             return redirect('index')
         else:
             # Se pergunta ou resposta estiverem vazios, renderize a página com uma mensagem de erro
-            all_chats = Chatbox.objects.all()
+            all_chats = Chatbox.objects.all().order_by('-id')
             return render(request, 'chatbox/index.html', {'chats': all_chats, 'error': 'Por favor, preencha ambos os campos.'})
     
     # Este bloco será executado para o método GET
-    all_chats = Chatbox.objects.all()
+    all_chats = Chatbox.objects.all().order_by('-id')
     return render(request, 'chatbox/index.html', {'chats': all_chats})
 
 # --------------------------------------------- RAG BOT -------------------------------------------------------------------------------
@@ -32,7 +32,8 @@ chroma_client = chromadb.PersistentClient(path=chromadb_path)
 collection = chroma_client.get_collection("my_collection")
 
 # Template para as respostas do chatbot
-prompt_template = """Você é um assistente de IA que responde as dúvidas dos usuários a respeito de um determinado político com bases nos documentos abaixo.
+prompt_template = """Você é um colabolador do comite de um determinado politico que responde as dúvidas dos usuários enfatisando os aspectos positivos. 
+A resposta pode iniciar com a pesquisa convencional, no entanto ela tem que respeitar o conteudo do documento abaixo.
 As perguntas mais recentes devem ser consideradas com mais peso ao gerar a resposta.
 Documentos:
 {documents}
@@ -60,6 +61,7 @@ def consulta_gpt(request):
         # Gerar o contexto da conversa usando o ChatGPT, limitado a 100 tokens
         try:
             contexto_conversa = gerar_contexto_curto(conversation_history)
+            print(f"Contexto conversa: {contexto_conversa}")
         except Exception as e:
             print(f"Erro ao gerar o contexto da conversa: {e}")
             return render(request, 'chatbox/index.html', {'chats': Chatbox.objects.all(), 'error': 'Erro ao gerar o contexto.'})
@@ -85,15 +87,23 @@ def consulta_gpt(request):
         return redirect('index')  # Redireciona para a página inicial
     
     # Este bloco será executado para o método GET
-    all_chats = Chatbox.objects.all()
+    all_chats = Chatbox.objects.all().order_by('-id')
     return render(request, 'chatbox/index.html', {'chats': all_chats})
 
 
 def gerar_contexto_curto(conversation_history):
     # Prompt para gerar o contexto da conversa
     prompt_contexto = [
-        {"role": "system", "content": "Analise a conversa abaixo e produza uma string que resuma o tema principal, considerando as últimas interações. Essa string será usada para realizar uma busca precisa em uma base de dados. O foco é criar um contexto claro e relevante para continuar a conversa."}
-
+        {
+            "role": "system",
+            "content": 
+            "Analise a conversa abaixo e, se a pergunta do usuário não estiver clara o suficiente, "
+            "forneça um contexto relevante para ajudar na busca em uma base de dados sobre um determinado político. "
+            "Se a pergunta estiver clara, apenas gere a pergunta sem adicionar contexto. "
+            "O foco é criar uma busca precisa para continuar a conversa. "
+            "IMPORTANTE: Não responda à conversa, apenas gere uma pergunta ou contexto adequado para a busca. "
+            "Limite a resposta a 100 tokens."
+        }
     ]
     prompt_contexto.extend(conversation_history)
 
