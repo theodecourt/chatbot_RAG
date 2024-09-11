@@ -3,7 +3,7 @@
 Siga os passos abaixo para rodar o projeto localmente:
 
 ## 1. Ative o ambiente virtual
-No diretorio do projeto:
+No diretório do projeto:
   ```bash
   env\Scripts\activate
   ```
