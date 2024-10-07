@@ -4,11 +4,12 @@ import os
 from dotenv import load_dotenv
 
 # Carregar as variáveis de ambiente do arquivo .env
-load_dotenv()
+load_dotenv(verbose=True, override=True)
 
 
 # Obter a chave da API a partir do .env
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+print("Chave API:", os.getenv("OPENAI_API_KEY"))
 
 # Inicialização do OpenAI e ChromaDB
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) 
