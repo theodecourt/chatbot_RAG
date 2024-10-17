@@ -34,6 +34,7 @@ def index(request):
 # --------------------------------------------- RAG BOT -------------------------------------------------------------------------------
 # Inicialização do OpenAI e ChromaDB
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) 
+# openai_client = OpenAI() --> teste para rodar a API de graça
 
 chromadb_path = "./chatbox/data_politico/chroma_storage"  # Caminho para o ChromaDB
 chroma_client = chromadb.PersistentClient(path=chromadb_path)
